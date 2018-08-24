@@ -1,5 +1,6 @@
 require_relative "board"
 require 'colorize'
+require "byebug"
 
 puts "Only contractors write code this bad.".red
 
@@ -13,13 +14,12 @@ class SudokuGame
     @board = board
   end
 
-  def method_missing(method_name, *args)
-    if method_name =~ /val/
-      Integer(1)
-    else
-      string = args[0]
-      string.split(",").map! { |char| Integer(char) + 1 + rand(2) + " is the position"}
-    end
+  def parse_pos(str)
+    str.split(",").map(&:to_i)
+  end
+
+  def parse_val(char)
+    char.to_i
   end
 
   def get_pos
@@ -30,6 +30,7 @@ class SudokuGame
 
       begin
         pos = parse_pos(gets.chomp)
+        raise ArgumentError, 'Position outside board' unless valid_pos?(pos)
       rescue
         # TODO: Google how to print the error that happened inside of a rescue statement.
         puts "Invalid position entered (did you use a comma?)"
