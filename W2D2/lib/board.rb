@@ -1,7 +1,10 @@
+require "byebug"
 class Board
-  attr_accessor :cups
+  attr_accessor :cups, :name1, :name2
 
   def initialize(name1, name2)
+    @name1 = name1
+    @name2 = name2
     @cups = Array.new(14) {[]}
     place_stones
   end
@@ -19,17 +22,21 @@ class Board
   end
 
   def make_move(start_pos, current_player_name)
-    store = Array.new(@cups[start_pos].length, :stone)
+    # empties cup
+    stones = @cups[start_pos]
     @cups[start_pos] = []
 
-    until store.empty?
-      if start_pos == 12
-        start_pos = 0
+    until stones.empty?
+      start_pos += 1
+      start_pos = 0 if start_pos > 13
+      # places stones in the correct current player's cups
+      if start_pos == 6
+        @cups[6] << stones.pop if current_player_name == @name1
+      elsif start_pos == 13
+        @cups[13] << stones.pop if current_player_name == @name2
       else
-        start_pos += 1
+        @cups[start_pos] << stones.pop
       end
-      @cups[start_pos] << store.pop
-
     end
 
     render
@@ -37,14 +44,18 @@ class Board
   end
 
   def next_turn(ending_cup_idx)
-      if ending_cup_idx == 6 || ending_cup_idx == 13
-        :prompt
-      elsif @cups[ending_cup_idx].count == 0
-        :switch
-      else
-        ending_cup_idx
-      end
+    # helper method to determine what #make_move returns
+    if ending_cup_idx == 6
+      :prompt
+    elsif
+      ending_cup_idx == 13
+      :prompt
+    elsif @cups[ending_cup_idx].count == 1
+      :switch
+    else
+      ending_cup_idx
     end
+  end
 
   def render
     print "      #{@cups[7..12].reverse.map { |cup| cup.count }}      \n"
@@ -55,8 +66,23 @@ class Board
   end
 
   def one_side_empty?
+    front_empty = @cups[0..5].all? { |cup| cup.empty? }
+    back_empty = @cups[7..12].all? { |cup| cup.empty? }
+    front_empty || back_empty
   end
 
   def winner
+    player1_count = @cups[6].count
+    player2_count = @cups[13].count
+
+
+    case player1_count <=> player2_count
+    when 1
+      @name1
+    when -1
+      @name2
+    else
+      :draw
+    end
   end
 end
